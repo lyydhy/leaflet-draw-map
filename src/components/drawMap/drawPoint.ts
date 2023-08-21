@@ -78,7 +78,7 @@ export class DrawPoint {
           }
         }
       ]
-    })
+    }).init()
   }
 
   addMarker(center: [number, number]) {

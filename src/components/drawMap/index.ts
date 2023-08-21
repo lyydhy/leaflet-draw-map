@@ -6,7 +6,7 @@ import type {GeoJSON} from "leaflet";
 import {DrawPoint} from './drawPoint.ts'
 import {DrawPolygon} from "./drawPolygon.ts";
 import {initDefaultProps, loadRemoteCss, loadScriptByUrls} from "./utils.ts";
-
+// import Leaflet from 'leaflet'
 
 export default class DrawMapLeaflet {
   options: DrawMapLeafletOptions
@@ -34,15 +34,14 @@ export default class DrawMapLeaflet {
         muti: false
       }
     })
-    console.log(this.options);
     this.init().then(() => {
     })
   }
 
   // 初始化
   async init() {
-    await this.importScriptAndStyle().catch(err => {
-      console.error(err)
+    await this.importScriptAndStyle().catch(() => {
+
     })
     // 初始化地图
     this.initMap()

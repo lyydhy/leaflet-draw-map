@@ -1,8 +1,8 @@
-import type * as LType from '@types/leaflet'
+import type * as L from '@types/leaflet'
 
 declare global {
   interface window {
-    L: LType
+    L: L
   }
 }
 

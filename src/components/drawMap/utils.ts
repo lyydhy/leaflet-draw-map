@@ -38,9 +38,7 @@ export function loadRemoteCss(url: string | string[], checkFunc: Function, prop:
       // @ts-ignore
       link.dataset[prop] = 1
       document.head.appendChild(link);
-      link.onload = function (ev) {
-        console.log(ev);
-        console.log(link.TEXT_NODE);
+      link.onload = function () {
         resolve(true)
       }
       link.onerror = function (e) {

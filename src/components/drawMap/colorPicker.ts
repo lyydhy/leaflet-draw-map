@@ -36,7 +36,6 @@ export default class ColorPicker {
 			// defaultColor: colorTransform(this.color).replace('(', '').replace(')', '').split(',').map(item => +item).slice(0, 3),  // red
 			update: (color: string) => {
 				this.color = color
-				console.log(color);
 
 				this.change()
 			}

@@ -17,6 +17,8 @@ const postcss = require('rollup-plugin-postcss')
 const autoprefixer = require('autoprefixer')
 const cssnano = require("cssnano");
 const esbuild = require('rollup-plugin-esbuild').default
+const importCdn = require('vite-plugin-cdn-import').default
+const autoComplete = require('vite-plugin-cdn-import').autoComplete
 const buildFormats = [{
 	key: 'es',
 	dir: 'es'
@@ -42,7 +44,15 @@ async function buildSingle(name) {
 		input: path.resolve(entryPath, `./index.ts`),
 		external: [],
 		plugins: [
-
+importCdn({
+	modules: [
+		{
+			name: 'leaflet',
+			var: 'L',
+			path: ["https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"]
+		}
+	]
+}),
 			resolve({
 				browser: true,
 			}),
