@@ -18,16 +18,15 @@ export default class ColorPicker {
 	}
 
 	initColorPicker() {
-
-
 		const reg = /rgba\((.+)\)/;
 		const result = reg.exec(colorTransform(this.color));
 		let defaultColor: number[] = []
 		if (result) {
 			const arr = result[1].split(',');
-			this.opacity = +arr[3]
+			// this.opacity = +arr[3]
 			defaultColor = arr.slice(0, 3).map(item => +item)
 		}
+		// console.log(result);
 
 		new ColorPickerJs({
 			container: document.querySelector(".leaflet-color-modal .leaflet-color-modal-content .color-picker-content"),

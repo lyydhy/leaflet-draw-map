@@ -511,6 +511,12 @@ function colorTransform(color, alpha = 1) {
     if (color?.startsWith('rgb') && !color?.startsWith('rgba')) {
         return color.replace('rgb', 'rgba').replace(')', `,${alpha})`);
     }
+    const reg = /rgba\((.+)\)/;
+    const result = reg.exec(color);
+    if (result) {
+        const arr = result[1].split(',');
+        return `rgba(${arr[0]},${arr[1]},${arr[2]},${alpha})`;
+    }
     return color.replace(/,\d\)/, `,${alpha})`);
 }
 
@@ -562,9 +568,10 @@ class ColorPicker {
         let defaultColor = [];
         if (result) {
             const arr = result[1].split(',');
-            this.opacity = +arr[3];
+            // this.opacity = +arr[3]
             defaultColor = arr.slice(0, 3).map(item => +item);
         }
+        // console.log(result);
         new colorPicker_minExports.ColorPicker({
             container: document.querySelector(".leaflet-color-modal .leaflet-color-modal-content .color-picker-content"),
             mode: colorPicker_minExports.ColorPicker.INPUT_TEXT_MODE_TYPE.RGB,
@@ -799,7 +806,10 @@ class DrawPolygon {
             writable: true,
             value: void 0
         });
-        this.options = options;
+        this.options = initDefaultProps(options, {
+            max: 1,
+            crs: 'wgs84'
+        });
         this.initStyle();
         if (!!options.value) {
             this.initDefaultValue();
@@ -813,27 +823,9 @@ class DrawPolygon {
         const that = this;
         this.initStyle();
         let { features } = this.options.value;
-        features.forEach((item) => {
+        features.map(item => {
             let geometry = item.geometry;
             let coordinates = geometry?.coordinates;
-            if (item.properties) {
-                if (item.properties['fill-color']) {
-                    this.polygonStyle.color = item.properties['fill-color'];
-                }
-                if (item.properties['fill-opacity']) {
-                    this.polygonStyle.opacity = item.properties['fill-opacity'];
-                }
-                if (item.properties['line-color']) {
-                    this.lineStyle.color = item.properties['line-color'];
-                }
-                if (item.properties['line-opacity']) {
-                    this.lineStyle.opacity = item.properties['line-opacity'];
-                }
-                if (item.properties['line-width']) {
-                    this.lineStyle.width = item.properties['line-width'];
-                }
-                initStyle();
-            }
             this.points = [];
             coordinates.forEach((item1) => {
                 item1.forEach((item2) => {
@@ -849,11 +841,26 @@ class DrawPolygon {
                             break;
                     }
                     this.points.push(center);
-                    // this.lines.addLatLng(item2)
                 });
+                if (item.properties) {
+                    if (item.properties['fill-color']) {
+                        this.polygonStyle.color = item.properties['fill-color'];
+                    }
+                    if (item.properties['fill-opacity']) {
+                        this.polygonStyle.opacity = item.properties['fill-opacity'];
+                    }
+                    if (item.properties['line-color']) {
+                        this.lineStyle.color = item.properties['line-color'];
+                    }
+                    if (item.properties['line-opacity']) {
+                        this.lineStyle.opacity = item.properties['line-opacity'];
+                    }
+                    if (item.properties['line-width']) {
+                        this.lineStyle.width = item.properties['line-width'];
+                    }
+                    initStyle();
+                }
             });
-            // this.options.map?.addLayer(this.lines)
-            // this.facelines.push(this.lines)
             this.endDraw();
         });
         initStyle();
@@ -886,7 +893,7 @@ class DrawPolygon {
     // 2. 绘制
     createFace() {
         let { hoverMarker, options } = this;
-        this.removePolygon();
+        // this.removePolygon()
         this.lines = window.L.polyline([], {
             color: colorTransform(this.lineStyle.color, 1),
         });
@@ -959,6 +966,8 @@ class DrawPolygon {
     }
     // 完成绘制
     endDraw() {
+        this.toolBoxDom?.["绘制"]?.classList.remove('active');
+        this.options.map?.off('click');
         let polygon = window.L.polygon([this.points], {
             color: colorTransform(this.lineStyle.color, 1),
             opacity: this.lineStyle.opacity,
@@ -975,8 +984,11 @@ class DrawPolygon {
         this.tempLines?.setLatLngs?.([]);
         // @ts-ignore
         this.lines?.setLatLngs?.([]);
-        this.endDrawChange();
+        this.markers.map(item => {
+            item?.removeFrom(this.options.map);
+        });
         this.polygonSelect = polygon;
+        this.endDrawChange();
         polygon.on('click', (e) => {
             this.isClickPolygon = true;
             setTimeout(() => {
@@ -1007,7 +1019,7 @@ class DrawPolygon {
      * change
      */
     endDrawChange() {
-        if (this.facepolygonList?.length === 0 || !this.polygonSelect)
+        if (this.facepolygonList?.length === 0)
             return;
         let features = this.featureTransform({
             type: 'FeatureCollection',
@@ -1166,7 +1178,12 @@ class DrawPolygon {
                         class: 'draw_start_btn'
                     },
                     onClick: (_, _dom) => {
+                        if (this.facepolygonList?.length >= this.options.max) {
+                            this.options?.onError?.('pointMax', '超过最大绘制数量');
+                            return;
+                        }
                         if (_dom.classList.contains('active')) {
+                            this.options?.onError?.('message', '超过最大绘制数量');
                             return;
                         }
                         _dom.classList.add('active');
@@ -1180,7 +1197,8 @@ class DrawPolygon {
                     },
                     onClick: (_, _dom, container) => {
                         this.removePolygon();
-                        this.options.onChange?.(undefined);
+                        // this.options.onChange?.(undefined)
+                        this.endDrawChange();
                         container.querySelector('.draw_start_btn')?.classList.remove('active');
                     }
                 },
@@ -1264,6 +1282,9 @@ class DrawMapLeaflet {
                     crs: this.options.crs,
                     onChange: (value) => {
                         this.options.onChange?.(value);
+                    },
+                    onError: (type, err) => {
+                        this.options.onError?.(type, err);
                     }
                 });
                 break;
@@ -1275,6 +1296,7 @@ class DrawMapLeaflet {
     initMap() {
         this.mapInstance = window.L.map(this.options.el, this.options.mapOptions);
         this.options.addTitleUrl?.(this.mapInstance);
+        this.options.onMapLoad?.(this.mapInstance, window.L);
     }
     /**
      * 导入样式和js文件

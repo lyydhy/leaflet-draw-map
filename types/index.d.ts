@@ -1,7 +1,7 @@
 /**
  * pointMax 打点抵达临界值的时候触发
  */
-type ErrorType = "pointMax";
+type ErrorType = "pointMax" | "message";
 type CrsType = "wgs84" | "gcj02" | "bd09";
 type DrawType = "point" | "polygon" | "polyline";
 
@@ -32,8 +32,10 @@ interface DrawPolygonOptions {
         lineStyle?: lineStyle;
         polygonStyle?: polygonStyle;
     };
+    max?: number;
     value?: GeoJSON.FeatureCollection;
     onChange?: (value: GeoJSON.FeatureCollection | undefined) => void;
+    onError?: (type: ErrorType, err: any) => void;
 }
 
 declare class DrawMapLeaflet {
@@ -65,6 +67,7 @@ interface DrawMapLeafletOptions {
     onChange?: (data: [number, number][] | GeoJSON.FeatureCollection | undefined) => void;
     onError?: (eventName: ErrorType, message: string) => void;
     drawOptions?: DrawPolygonOptions;
+    onMapLoad?: (map: any, L: any) => void;
 }
 
 export { type DrawMapLeafletOptions, DrawMapLeaflet as default };

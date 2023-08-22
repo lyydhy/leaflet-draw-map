@@ -1,4 +1,4 @@
-import type * as L from '@types/leaflet'
+import type * as L from 'leaflet'
 
 declare global {
   interface window {
