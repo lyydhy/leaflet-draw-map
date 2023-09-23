@@ -6,7 +6,7 @@ import DrawMapLeaflet from "./components/drawMap";
 onMounted(() => {
   new DrawMapLeaflet({
     el: document.getElementById('mapContainer'),
-    drawType: "polygon",
+    drawType: "point",
     onChange: (data) => {
       console.log(data);
     },
